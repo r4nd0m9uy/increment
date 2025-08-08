@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Byte Foundry — Expanded Incremental</title>
+<style>
+  :root{
+    --bg:#0f1221; --panel:#171a2e; --acc:#6bdcff; --acc2:#9af277; --text:#e9efff; --muted:#8ca0c8; --danger:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif; color:var(--text); background:linear-gradient(180deg,#0b0e1b, var(--bg) 180px);}
+  header{padding:14px 16px; display:flex; gap:10px; align-items:center; justify-content:space-between; background:#0b0e1b; border-bottom:1px solid #1f2441; position:sticky; top:0; z-index:3}
+  .brand{font-weight:800; letter-spacing:.3px}
+  .wrap{max-width:1200px; margin:0 auto; padding:18px; display:grid; gap:18px; grid-template-columns: 1.2fr .8fr;}
+  @media (max-width:980px){ .wrap{grid-template-columns:1fr} }
+  .card{background:var(--panel); border:1px solid #242a4c; border-radius:12px; padding:16px; box-shadow:0 1px 0 rgba(255,255,255,.02) inset;}
+  .row{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .col{display:flex; flex-direction:column; gap:8px}
+  .stat{background:#10142a; border:1px solid #22274a; border-radius:10px; padding:8px 10px; min-width:120px}
+  .big{font-size:clamp(26px,5vw,40px); font-weight:800; letter-spacing:.5px; margin:.2rem 0}
+  button{background:#141937; color:var(--text); border:1px solid #2a3263; padding:10px 14px; border-radius:10px; cursor:pointer; transition:.15s transform, .15s opacity, .15s filter}
+  button:hover{filter:brightness(1.1)}
+  button:active{transform:scale(.98)}
+  button:disabled{opacity:.5; cursor:not-allowed; filter:none}
+  .primary{background:linear-gradient(180deg,#1b2254,#151a3c); border-color:#3a4aa1}
+  .accent{background:linear-gradient(180deg,#1a3b4a,#142c37); border-color:#2f6a82}
+  .danger{background:linear-gradient(180deg,#4a1a2a,#351424); border-color:#8f3553}
+  .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#0e132a; border:1px solid #263061; color:#cfe0ff}
+  .click-area{display:grid; place-items:center; height:220px; border-radius:12px; border:1px dashed #2a2f58; background:#10142a; position:relative; overflow:hidden}
+  .click-button{font-size:18px; padding:14px 18px}
+  .float{position:absolute; pointer-events:none; animation:floatUp .9s ease-out forwards; font-weight:700; text-shadow:0 1px 0 #000; opacity:.9}
+  @keyframes floatUp{to{transform:translateY(-40px); opacity:0}}
+  .grid{display:grid; gap:10px}
+  .grid-2{display:grid; gap:10px; grid-template-columns:1fr 1fr}
+  @media (max-width:680px){ .grid-2{grid-template-columns:1fr} }
+  .shop{display:grid; gap:10px}
+  .shop-item{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; padding:10px; border:1px solid #27305a; border-radius:10px; background:#10142a}
+  .item-meta{font-size:13px; color:var(--muted)}
+  .price{font-weight:700}
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{padding:8px 10px; border-radius:10px; border:1px solid #27305a; background:#10142a; cursor:pointer}
+  .tab[aria-selected="true"]{outline:2px solid #3a4aa1}
+  details{border:1px solid #263061; border-radius:10px; padding:8px 10px; background:#0f1430}
+  summary{cursor:pointer}
+  kbd{background:#0b0f28; border:1px solid #2b3568; padding:1px 6px; border-radius:6px; font-size:12px}
+  .hint{color:var(--muted); font-size:12px}
+  .green{color:var(--acc2)} .blue{color:var(--acc)}
+  .prestigeBox{border:1px solid #2a7451; background:linear-gradient(180deg,#0f2a1e,#0b1f17); border-radius:12px; padding:12px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .research-item,.upgrade-item,.quest-item{display:flex; align-items:center; justify-content:space-between; gap:10px; border:1px solid #27305a; border-radius:10px; background:#10142a; padding:10px}
+  .badge{font-size:12px; padding:2px 6px; border-radius:7px; border:1px solid #2a3263; background:#0d1231}
+  .ach-list{display:grid; gap:8px}
+  .ach{display:flex; justify-content:space-between; gap:10px; padding:8px; border:1px dashed #2a2f58; border-radius:8px}
+  .done{border-style:solid; background:#0f1a33}
+  .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(0,0,0,.45); z-index:5}
+  .modal.open{display:grid}
+  .modal .card{width:min(700px,95vw); max-height:85vh; overflow:auto}
+  .footer-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-top:8px}
+  .sep{height:1px; background:#27305a; margin:8px 0}
+  .tiny{font-size:11px; opacity:.8}
+  .switch{display:inline-flex; align-items:center; gap:8px}
+  .range{width:220px}
+  /* Light theme */
+  body.light{--bg:#f6f7fb; --panel:#ffffff; --text:#0c1228; --muted:#5b6b88; --acc:#005fcc; --acc2:#0a8a36; --danger:#b81e3c}
+  body.light .click-area{background:#f1f4fd; border-color:#dfe5ff}
+  body.light .stat{background:#f1f4fd; border-color:#dfe5ff}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">💾 Byte Foundry</div>
+    <div class="row">
+      <div class="stat"><div class="mono" id="timeStat">—</div></div>
+      <button id="saveBtn" class="accent">Save</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <button id="settingsBtn">Settings</button>
+      <button id="resetBtn" class="danger">Hard Reset</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <div class="row">
+        <div class="stat"><div>Bytes</div><div class="big" id="bytes">0</div></div>
+        <div class="stat"><div>Production</div><div><span id="bps" class="blue">0</span> /s</div></div>
+        <div class="stat"><div>Click Power</div><div><span id="clickPower" class="green">1</span></div></div>
+        <div class="stat"><div>Gems</div><div><span id="gems" class="green">0</span></div></div>
+        <div class="stat"><div>Research</div><div><span id="rp" class="blue">0</span> RP</div></div>
+        <span class="pill">Global Multiplier: <span id="mult">x1.00</span></span>
+      </div>
+
+      <div class="click-area" id="clickArea" title="Click or press [Space]">
+        <button id="clickBtn" class="primary click-button">Compile (+<span id="clickGain">1</span>)</button>
+      </div>
+
+      <div class="tabs" role="tablist" style="margin-top:12px">
+        <button class="tab" data-panel="shopPanel" aria-selected="true">Shop</button>
+        <button class="tab" data-panel="researchPanel">Research</button>
+        <button class="tab" data-panel="upgradesPanel">Gem Upgrades</button>
+        <button class="tab" data-panel="questsPanel">Quests</button>
+        <button class="tab" data-panel="achPanel">Achievements</button>
+        <button class="tab" data-panel="statsPanel">Stats</button>
+      </div>
+
+      <div id="panels" class="col" style="margin-top:10px">
+        <div id="shopPanel" class="card" style="padding:10px">
+          <div class="shop" id="shop"></div>
+        </div>
+
+        <div id="researchPanel" class="card" style="display:none; padding:10px">
+          <div class="hint">Labs generate Research Points (RP). Some techs add new buildings or boosts. RP is not reset on prestige.</div>
+          <div class="grid-2" id="researchList"></div>
+        </div>
+
+        <div id="upgradesPanel" class="card" style="display:none; padding:10px">
+          <div class="hint">Spend Gems on permanent multipliers (prestige tree). These persist across resets.</div>
+          <div class="grid-2" id="upgradeList"></div>
+        </div>
+
+        <div id="questsPanel" class="card" style="display:none; padding:10px">
+          <div class="hint">Complete quests for rewards (gems or RP). New quests appear as you progress.</div>
+          <div class="col" id="questList"></div>
+        </div>
+
+        <div id="achPanel" class="card" style="display:none; padding:10px">
+          <div class="ach-list" id="achList"></div>
+        </div>
+
+        <div id="statsPanel" class="card" style="display:none; padding:10px">
+          <div class="grid">
+            <div>Total Bytes Earned: <b class="mono" id="statTotalBytes">0</b></div>
+            <div>Run Time: <b class="mono" id="statRunTime">0s</b></div>
+            <div>Lifetime Gems: <b class="mono" id="statLifeGems">0</b></div>
+            <div>Prestiges: <b class="mono" id="statPrestiges">0</b></div>
+            <div>Highest B/s: <b class="mono" id="statBestBps">0</b></div>
+            <div>Clicks: <b class="mono" id="statClicks">0</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-row">
+        <div class="hint">Hotkeys: <kbd>Space</kbd> click • <kbd>1..9</kbd> buy • <kbd>R</kbd> Research • <kbd>G</kbd> Upgrades • <kbd>A</kbd> Achievements • Shift=×10 • Ctrl=×100</div>
+        <div class="hint" id="offlineHint"></div>
+      </div>
+    </section>
+
+    <aside class="grid">
+      <section class="card">
+        <h3 style="margin-top:0;">Prestige</h3>
+        <div class="prestigeBox">
+          <div>Next prestige at <span id="prestigeNeed" class="mono">50,000</span> bytes → you’ll earn <b><span id="prestigeGain">0</span> Gems</b>.</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button id="prestigeBtn" class="accent" disabled>Ascend & Convert</button>
+            <span class="hint">Gem boost: +25% per Gem (multiplicative)</span>
+          </div>
+          <div class="sep"></div>
+          <div class="hint" id="dailyBonus">Daily bonus: —</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>Changelog & Tips</summary>
+          <ul>
+            <li>New: Research, Gem upgrades, Quests, Achievements, Milestones, Daily bonus, Stats, Settings.</li>
+            <li>Autosave every N seconds (configurable). Offline progress up to 8h.</li>
+            <li>Milestones: Owning certain amounts unlocks passive boosts.</li>
+          </ul>
+        </details>
+      </section>
+    </aside>
+  </main>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settingsModal" aria-hidden="true">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h3 style="margin:0">Settings</h3>
+        <button id="closeSettings">Close</button>
+      </div>
+      <div class="sep"></div>
+      <div class="grid">
+        <label class="switch"><input type="checkbox" id="autosaveToggle"> Autosave</label>
+        <label>Autosave Interval (sec): <input type="number" id="autosaveSec" min="5" max="120" step="1" value="20" style="width:90px"></label>
+        <label>FPS cap: <input type="range" id="fpsCap" class="range" min="10" max="120" value="60"> <span id="fpsCapLbl">60</span></label>
+        <label>Number format:
+          <select id="numFmt">
+            <option value="short">Short (K, M, B)</option>
+            <option value="full">Full</option>
+            <option value="sci">Scientific</option>
+          </select>
+        </label>
+        <label class="switch"><input type="checkbox" id="themeToggle"> Light theme</label>
+      </div>
+      <div class="sep"></div>
+      <div class="tiny">Tip: you can export your save and keep it safe. Import to continue on another device.</div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- Utilities ----------
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+  const now = ()=>Date.now();
+  const SAVE_KEY = "byteFoundrySave_v2";
+  const VERSION = "2.0.0";
+
+  const formatters = {
+    short(n){
+      if (!isFinite(n)) return "∞";
+      const abs = Math.abs(n);
+      if (abs < 1000) return (abs < 10 ? n.toFixed(2) : abs < 100 ? n.toFixed(1) : Math.round(n)).toString();
+      const units = ["K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","De","Ud","Dd"];
+      let i=-1; let x = n;
+      while (Math.abs(x) >= 1000 && i < units.length-1){ x/=1000; i++; }
+      return (Math.abs(x) < 10 ? x.toFixed(2) : Math.abs(x) < 100 ? x.toFixed(1) : Math.round(x)) + units[i];
+    },
+    full(n){ return Intl.NumberFormat().format(Math.floor(n)); },
+    sci(n){
+      if (n===0) return "0";
+      const e = Math.floor(Math.log10(Math.abs(n)));
+      const m = n / Math.pow(10,e);
+      return m.toFixed(2) + "e" + e;
+    }
+  };
+  let fmt = (n)=>formatters.short(n);
+
+  // ---------- Game Data ----------
+  const baseItems = [
+    { id:"cursor", name:"Cursor", baseCost:  15, costMult: 1.15, bps: 0.1, owned: 0, hotkey:'1' },
+    { id:"script", name:"Script", baseCost: 100, costMult: 1.17, bps: 1.0, owned: 0, hotkey:'2' },
+    { id:"bot",    name:"Build Bot", baseCost: 1100, costMult: 1.15, bps: 8.0, owned: 0, hotkey:'3' },
+    { id:"server", name:"Server", baseCost: 12000, costMult: 1.14, bps: 47.0, owned: 0, hotkey:'4' },
+    { id:"cluster",name:"Cluster", baseCost:130000, costMult: 1.13, bps:260.0, owned: 0, hotkey:'5' },
+    { id:"lab",    name:"R&D Lab", baseCost:1400000, costMult: 1.12, bps:1400.0, owned: 0, hotkey:'6' }, // also generates RP
+  ];
+
+  const researchDefs = [
+    { id:"opt-1", name:"Micro-Optimizations", desc:"+10% global B/s", cost: 25, effect: s=>s.multipliers.research *= 1.10 },
+    { id:"multi-threads", name:"Multi-Threading", desc:"Clicks scale with B/s (small)", cost: 60, effect: s=>{ s.flags.clickScales = true; } },
+    { id:"auto-buy", name:"Auto-Buyer", desc:"Auto buy cheapest every 5s", cost: 100, effect: s=>{ s.flags.autoBuyer = true; } },
+    { id:"item-7", name:"GPU Farm", desc:"Unlock new building", cost: 150, effect: s=>{ addBuilding({ id:"gpu", name:"GPU Farm", baseCost: 16000000, costMult:1.12, bps: 9000, owned:0, hotkey:'7' }); } },
+    { id:"opt-2", name:"Algorithmic Sorcery", desc:"+20% global B/s", cost: 200, effect: s=>s.multipliers.research *= 1.20 },
+  ];
+
+  const gemUpgrades = [
+    { id:"gem-bps-1", name:"Throughput I", desc:"+20% B/s", cost: 2, apply:s=>s.multipliers.gemUp *= 1.20 },
+    { id:"gem-bps-2", name:"Throughput II", desc:"+30% B/s", cost: 5, apply:s=>s.multipliers.gemUp *= 1.30 },
+    { id:"gem-click", name:"Compiler Flags", desc:"+50% click power", cost: 3, apply:s=>s.multipliers.clickUp *= 1.50 },
+    { id:"gem-lab-rp", name:"Lab Grants", desc:"+50% RP from Labs", cost: 4, apply:s=>s.multipliers.rpUp *= 1.50 },
+    { id:"gem-discount", name:"Vendor Discounts", desc:"-2% shop costs", cost: 6, apply:s=>s.multipliers.costMult *= 0.98 },
+  ];
+
+  const milestones = [
+    { id:"m1", check:s=>ownedOf("cursor")>=25, apply:s=>{ s.milestone.bonusClick += 1; }, text:"+1 base click (25 Cursors)" },
+    { id:"m2", check:s=>ownedOf("script")>=25, apply:s=>{ s.milestone.bonusBps *= 1.05; }, text:"+5% B/s (25 Scripts)" },
+    { id:"m3", check:s=>ownedTotal()>=200, apply:s=>{ s.flags.bulkBuyUnlocked = true; }, text:"Bulk buy unlocked in UI (200 total)" },
+  ];
+
+  const achievements = [
+    { id:"a1", name:"Hello, World", desc:"Make your first 100 bytes", check:s=>s.totalBytes>=100, reward: s=>{} },
+    { id:"a2", name:"Compiler Fan", desc:"Click 100 times", check:s=>s.stats.clicks>=100, reward: s=>{} },
+    { id:"a3", name:"Ops Team", desc:"Own 50 items total", check:()=>ownedTotal()>=50, reward:s=>{} },
+    { id:"a4", name:"Serious Throughput", desc:"Reach 1K B/s", check:s=>currentBps()>=1000, reward:s=>{} },
+    { id:"a5", name:"Shiny!", desc:"Prestige once", check:s=>s.stats.prestiges>=1, reward:s=>{} },
+  ];
+
+  const quests = [
+    { id:"q1", name:"Kickoff", desc:"Own a Script and a Bot", check:s=>ownedOf("script")>=1 && ownedOf("bot")>=1, reward:{gems:1} },
+    { id:"q2", name:"Scaling Up", desc:"Reach 5,000 B/s", check:s=>currentBps()>=5000, reward:{rp:50} },
+    { id:"q3", name:"Big Spender", desc:"Spend 1,000,000 bytes lifetime", check:s=>s.spendTotal>=1_000_000, reward:{gems:2} },
+  ];
+
+  const prestigeConfig = {
+    threshold: 50000,
+    gainFactor: 100000,
+    gemBoost: 0.25
+  };
+
+  // ---------- State ----------
+  const state = {
+    version: VERSION,
+    bytes: 0,
+    totalBytes: 0,
+    spendTotal: 0,
+    gems: 0,
+    rp: 0,
+    items: JSON.parse(JSON.stringify(baseItems)),
+    lastTick: now(),
+    lastSave: now(),
+    offlineAwarded: 0,
+    clickLevel: 0,
+    stats:{ clicks:0, prestiges:0, runStart: now(), bestBps:0, lifetimeGems:0 },
+    flags:{ clickScales:false, autoBuyer:false, bulkBuyUnlocked:false },
+    multipliers:{ research:1, gemUp:1, clickUp:1, rpUp:1, costMult:1 },
+    milestone:{ applied:[], bonusClick:0, bonusBps:1 },
+    research:{ bought:[] },
+    upgrades:{ bought:[] },
+    achievements:[],
+    quests:{ done:[] },
+    settings:{ autosave:true, autosaveSec:20, fpsCap:60, numFmt:"short", theme:"dark" },
+    daily:{ last:0, streak:0 }
+  };
+
+  // ---------- DOM ----------
+  const el = id => document.getElementById(id);
+  const elBytes=el('bytes'), elBps=el('bps'), elClickPower=el('clickPower'), elClickGain=el('clickGain'), elGems=el('gems'), elMult=el('mult'), elRP=el('rp');
+  const elShop=el('shop'), elClickBtn=el('clickBtn'), elClickArea=el('clickArea'), elOffline=el('offlineHint');
+  const elPrestigeNeed=el('prestigeNeed'), elPrestigeGain=el('prestigeGain'), elPrestigeBtn=el('prestigeBtn'), elTimeStat=el('timeStat');
+  const elDaily=el('dailyBonus');
+  // settings
+  const settingsModal = el('settingsModal'), settingsBtn = el('settingsBtn'), closeSettings = el('closeSettings');
+  const autosaveToggle = el('autosaveToggle'), autosaveSec = el('autosaveSec'), fpsCap = el('fpsCap'), fpsCapLbl = el('fpsCapLbl'), numFmt=el('numFmt'), themeToggle=el('themeToggle');
+
+  // header controls
+  el('saveBtn').addEventListener('click', manualSave);
+  el('exportBtn').addEventListener('click', doExport);
+  el('importBtn').addEventListener('click', doImport);
+  el('resetBtn').addEventListener('click', hardReset);
+
+  // tabs
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+      btn.setAttribute('aria-selected','true');
+      const id = btn.dataset.panel;
+      document.querySelectorAll('#panels > .card').forEach(p=>p.style.display='none');
+      el(id).style.display = 'block';
+    });
+  });
+
+  // ---------- Persistence ----------
+  function save(){
+    state.lastSave = now();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  }
+  function manualSave(){ save(); toast("Saved!"); }
+  function load(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    try{
+      const s = JSON.parse(raw);
+      // shallow merge with defaults
+      Object.assign(state, s);
+      // ensure new props exist
+      ensureForwardCompat();
+    }catch{}
+  }
+  function ensureForwardCompat(){
+    if (!state.version) state.version = VERSION;
+    if (!state.items) state.items = JSON.parse(JSON.stringify(baseItems));
+    if (!state.multipliers) state.multipliers = { research:1, gemUp:1, clickUp:1, rpUp:1, costMult:1 };
+    if (!state.milestone) state.milestone = { applied:[], bonusClick:0, bonusBps:1 };
+    if (!state.research) state.research = { bought:[] };
+    if (!state.upgrades) state.upgrades = { bought:[] };
+    if (!state.achievements) state.achievements=[];
+    if (!state.quests) state.quests={done:[]};
+    if (!state.settings) state.settings={ autosave:true, autosaveSec:20, fpsCap:60, numFmt:"short", theme:"dark" };
+    if (!state.daily) state.daily={ last:0, streak:0 };
+    applyTheme();
+    fmt = formatters[state.settings.numFmt] || formatters.short;
+  }
+  function doExport(){
+    const data = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    navigator.clipboard.writeText(data).then(()=>toast("Save copied to clipboard!"));
+  }
+  async function doImport(){
+    const data = prompt("Paste exported save data:");
+    if (!data) return;
+    try{
+      const json = JSON.parse(decodeURIComponent(escape(atob(data))));
+      localStorage.setItem(SAVE_KEY, JSON.stringify(json));
+      location.reload();
+    }catch{ alert("Invalid save string."); }
+  }
+  function hardReset(){
+    if (!confirm("This wipes your progress. Continue?")) return;
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  }
+
+  // ---------- Calculations ----------
+  function globalMult(){
+    const gemMult = Math.pow(1 + prestigeConfig.gemBoost, state.gems);
+    return gemMult * state.multipliers.research * state.multipliers.gemUp * state.milestone.bonusBps;
+  }
+  function clickPower(){
+    const base = 1 + state.clickLevel + state.milestone.bonusClick;
+    const scaled = state.flags.clickScales ? (base + Math.sqrt(currentBps())) : base;
+    return Math.floor(scaled * state.multipliers.clickUp * globalMult());
+  }
+  function currentBps(){
+    const mult = globalMult();
+    const base = state.items.reduce((sum, it)=> sum + it.bps * it.owned, 0);
+    return base * mult;
+  }
+  function ownedOf(id){ const it = state.items.find(x=>x.id===id); return it?it.owned:0; }
+  function ownedTotal(){ return state.items.reduce((a,b)=>a+b.owned,0); }
+  function getItem(id){ return state.items.find(x=>x.id===id); }
+  function itemCost(item, qty=1){
+    const r = item.costMult * state.multipliers.costMult;
+    const n = item.owned;
+    if (qty===1) return item.baseCost * Math.pow(r, n);
+    return item.baseCost * Math.pow(r,n) * ((Math.pow(r, qty) - 1) / (r - 1));
+  }
+
+  // ---------- UI ----------
+  function renderShop(){
+    elShop.innerHTML = '';
+    state.items.forEach((it, idx)=>{
+      const node = document.createElement('div');
+      node.className = 'shop-item';
+      node.innerHTML = `
+        <div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <strong>${it.name}</strong>
+            <span class="pill">+${fmt(it.bps)} /s</span>
+            <span class="pill">Owned: <span data-owned="${it.id}">${it.owned}</span></span>
+            <span class="pill">Hotkey: ${it.hotkey||'-'}</span>
+          </div>
+          <div class="item-meta">Cost: <span class="price" data-cost1="${it.id}">${fmt(itemCost(it,1))}</span> bytes (x1)</div>
+          <div class="item-meta">x10: <span class="price" data-cost10="${it.id}">${fmt(itemCost(it,10))}</span> • x100: <span class="price" data-cost100="${it.id}">${fmt(itemCost(it,100))}</span></div>
+        </div>
+        <div class="row">
+          <button class="buy" data-i="${idx}" data-q="1">Buy 1</button>
+          <button class="buy" data-i="${idx}" data-q="10">x10</button>
+          <button class="buy" data-i="${idx}" data-q="100">x100</button>
+        </div>
+      `;
+      elShop.appendChild(node);
+    });
+    elShop.querySelectorAll('.buy').forEach(b=>b.addEventListener('click', ()=>{
+      buy(parseInt(b.dataset.i), parseInt(b.dataset.q));
+    }));
+  }
+
+  function renderResearch(){
+    const wrap = el('researchList');
+    wrap.innerHTML = '';
+    researchDefs.forEach(r=>{
+      const owned = state.research.bought.includes(r.id);
+      const btn = document.createElement('div');
+      btn.className = 'research-item';
+      btn.innerHTML = `
+        <div>
+          <div><strong>${r.name}</strong> ${owned?'<span class="badge">Purchased</span>':''}</div>
+          <div class="tiny">${r.desc}</div>
+        </div>
+        <div class="row">
+          <span class="price">${owned?'—':fmt(r.cost)+' RP'}</span>
+          <button ${owned?'disabled':''} data-id="${r.id}" class="accent">Buy</button>
+        </div>
+      `;
+      wrap.appendChild(btn);
+    });
+    wrap.querySelectorAll('button[data-id]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id = b.dataset.id;
+        const r = researchDefs.find(x=>x.id===id);
+        if (!r) return;
+        if (state.rp < r.cost) return toast("Not enough RP");
+        if (state.research.bought.includes(id)) return;
+        state.rp -= r.cost;
+        state.research.bought.push(id);
+        r.effect(state);
+        renderAll();
+        save();
+      });
+    });
+  }
+
+  function renderUpgrades(){
+    const wrap = el('upgradeList');
+    wrap.innerHTML = '';
+    gemUpgrades.forEach(u=>{
+      const owned = state.upgrades.bought.includes(u.id);
+      const row = document.createElement('div');
+      row.className = 'upgrade-item';
+      row.innerHTML = `
+        <div>
+          <div><strong>${u.name}</strong> ${owned?'<span class="badge">Bought</span>':''}</div>
+          <div class="tiny">${u.desc}</div>
+        </div>
+        <div class="row">
+          <span class="price">${owned?'—':u.cost+' Gems'}</span>
+          <button ${owned?'disabled':''} data-id="${u.id}" class="accent">Buy</button>
+        </div>
+      `;
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('button[data-id]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const id = b.dataset.id;
+        const u = gemUpgrades.find(x=>x.id===id);
+        if (!u) return;
+        if (state.gems < u.cost) return toast("Not enough Gems");
+        if (state.upgrades.bought.includes(id)) return;
+        state.gems -= u.cost;
+        state.upgrades.bought.push(id);
+        u.apply(state);
+        renderAll(); save();
+      });
+    });
+  }
+
+  function renderQuests(){
+    const wrap = el('questList');
+    wrap.innerHTML = '';
+    quests.forEach(q=>{
+      const done = state.quests.done.includes(q.id);
+      const row = document.createElement('div');
+      row.className = 'quest-item';
+      row.innerHTML = `
+        <div>
+          <strong>${q.name}</strong> ${done?'<span class="badge">Done</span>':''}
+          <div class="tiny">${q.desc}</div>
+        </div>
+        <div class="row">
+          <button ${done?'disabled':''} data-id="${q.id}">Claim</button>
+        </div>
+      `;
+      wrap.appendChild(row);
+    });
+    wrap.querySelectorAll('button[data-id]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const q = quests.find(x=>x.id===b.dataset.id);
+        if (!q) return;
+        if (state.quests.done.includes(q.id)) return;
+        if (!q.check(state)) return toast("Objective not met");
+        state.quests.done.push(q.id);
+        if (q.reward.gems) { state.gems += q.reward.gems; state.stats.lifetimeGems += q.reward.gems; }
+        if (q.reward.rp) { state.rp += q.reward.rp; }
+        toast("Quest complete!");
+        renderAll(); save();
+      });
+    });
+  }
+
+  function renderAchievements(){
+    const wrap = el('achList'); wrap.innerHTML='';
+    achievements.forEach(a=>{
+      const done = state.achievements.includes(a.id);
+      const row = document.createElement('div'); row.className='ach'+(done?' done':'');
+      row.innerHTML = `<div><strong>${a.name}</strong><div class="tiny">${a.desc}</div></div><div>${done?'✅':'—'}</div>`;
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderStats(){
+    el('statTotalBytes').textContent = fmt(state.totalBytes);
+    const rt = Math.floor((now() - state.stats.runStart)/1000);
+    el('statRunTime').textContent = rt+"s";
+    el('statLifeGems').textContent = state.stats.lifetimeGems;
+    el('statPrestiges').textContent = state.stats.prestiges;
+    el('statBestBps').textContent = fmt(state.stats.bestBps);
+    el('rp').textContent = fmt(state.rp);
+  }
+
+  function renderHeader(){
+    const bps = currentBps();
+    elBytes.textContent = fmt(state.bytes);
+    elBps.textContent = fmt(bps);
+    elClickPower.textContent = fmt(clickPower());
+    elClickGain.textContent = fmt(clickPower());
+    elGems.textContent = fmt(state.gems);
+    elMult.textContent = "x" + (globalMult()).toFixed(2);
+    elRP.textContent = fmt(state.rp);
+    const d = new Date(); elTimeStat.textContent = d.toLocaleTimeString();
+    // shop quick state
+    state.items.forEach(it=>{
+      const o = document.querySelector(`[data-owned="${it.id}"]`); if (o) o.textContent = it.owned;
+      const c1 = document.querySelector(`[data-cost1="${it.id}"]`); if (c1) c1.textContent = fmt(itemCost(it,1));
+      const c10= document.querySelector(`[data-cost10="${it.id}"]`); if (c10) c10.textContent = fmt(itemCost(it,10));
+      const c100=document.querySelector(`[data-cost100="${it.id}"]`); if (c100) c100.textContent = fmt(itemCost(it,100));
+    });
+    // prestige
+    elPrestigeNeed.textContent = fmt(prestigeConfig.threshold);
+    const gain = prestigePreview();
+    elPrestigeGain.textContent = gain;
+    elPrestigeBtn.disabled = gain<=0;
+  }
+
+  function renderAll(){ renderHeader(); renderShop(); renderResearch(); renderUpgrades(); renderQuests(); renderAchievements(); renderStats(); }
+
+  // ---------- Buy / Click ----------
+  function buy(idx, qty){
+    const it = state.items[idx]; if (!it) return;
+    const cost = itemCost(it, qty);
+    if (state.bytes < cost) return;
+    state.bytes -= cost;
+    state.spendTotal += cost;
+    it.owned += qty;
+    checkMilestones();
+    renderAll();
+  }
+  function doClick(x,y){
+    const gain = clickPower();
+    state.bytes += gain;
+    state.totalBytes += gain;
+    state.stats.clicks++;
+    floatText(`+${fmt(gain)}`, x, y, '#6bdcff');
+    renderHeader();
+  }
+
+  // ---------- Floating text & Toast ----------
+  function floatText(txt, x, y, color='#fff'){
+    const s = document.createElement('div');
+    s.className='float'; s.textContent=txt; s.style.left=(x-10)+'px'; s.style.top=(y-10)+'px'; s.style.color=color;
+    elClickArea.appendChild(s);
+    setTimeout(()=>s.remove(), 900);
+  }
+  function toast(msg){
+    floatText(msg, elClickArea.clientWidth - 120, 24, '#9af277');
+  }
+
+  // ---------- Prestige ----------
+  function prestigePreview(){
+    const need = prestigeConfig.threshold;
+    return state.bytes >= need ? (1 + Math.floor((state.bytes - need) / prestigeConfig.gainFactor)) : 0;
+  }
+  function prestige(){
+    const gain = prestigePreview();
+    if (gain<=0) return;
+    if (!confirm(`Ascend now for ${gain} Gems? This resets Bytes & items (RP, research, and gem upgrades stay).`)) return;
+    state.gems += gain; state.stats.lifetimeGems += gain;
+    state.stats.prestiges += 1;
+    // reset soft stuff
+    state.bytes = 0; state.totalBytes = 0; state.spendTotal = 0;
+    state.items.forEach(i=>i.owned=0);
+    state.clickLevel = 0;
+    // keep RP, research, gem upgrades, milestones stay applied but can re-apply logic harmlessly
+    renderAll(); save(); toast(`Ascended! +${gain} Gems`);
+  }
+  elPrestigeBtn.addEventListener('click', prestige);
+
+  // ---------- Milestones / Achievements / Quests checks ----------
+  function checkMilestones(){
+    milestones.forEach(m=>{
+      if (state.milestone.applied.includes(m.id)) return;
+      if (m.check(state)){
+        m.apply(state); state.milestone.applied.push(m.id);
+        toast("Milestone: "+m.text);
+      }
+    });
+  }
+  function checkAchievements(){
+    achievements.forEach(a=>{
+      if (state.achievements.includes(a.id)) return;
+      if (a.check(state)){ state.achievements.push(a.id); a.reward(state); toast("Achievement: "+a.name); }
+    });
+  }
+
+  // ---------- Research & RP ----------
+  function labsRPperSec(){
+    const labs = ownedOf("lab");
+    const base = labs * 0.25; // 0.25 RP/s per Lab
+    return base * state.multipliers.rpUp;
+  }
+
+  // ---------- Add building dynamically ----------
+  function addBuilding(def){
+    if (state.items.find(x=>x.id===def.id)) return;
+    state.items.push(def);
+    // Assign hotkey if missing
+    if (!def.hotkey){
+      const idx = state.items.length;
+      def.hotkey = String(idx);
+    }
+    renderShop();
+  }
+
+  // ---------- AutoBuyer ----------
+  let autoBuyerTick = 0;
+  function runAutoBuyer(dt){
+    if (!state.flags.autoBuyer) return;
+    autoBuyerTick += dt;
+    if (autoBuyerTick < 5) return;
+    autoBuyerTick = 0;
+    // pick cheapest affordable item (1 unit)
+    let best = null, bestCost = Infinity, idx=-1;
+    state.items.forEach((it,i)=>{
+      const c = itemCost(it,1);
+      if (c < bestCost && c <= state.bytes){ best=it; bestCost=c; idx=i; }
+    });
+    if (best){ buy(idx,1); }
+  }
+
+  // ---------- Settings ----------
+  function openSettings(){ settingsModal.classList.add('open'); settingsModal.setAttribute('aria-hidden','false'); }
+  function closeSettingsModal(){ settingsModal.classList.remove('open'); settingsModal.setAttribute('aria-hidden','true'); }
+  settingsBtn.addEventListener('click', openSettings);
+  closeSettings.addEventListener('click', closeSettingsModal);
+  settingsModal.addEventListener('click', e=>{ if (e.target===settingsModal) closeSettingsModal(); });
+
+  function initSettingsUI(){
+    autosaveToggle.checked = state.settings.autosave;
+    autosaveSec.value = state.settings.autosaveSec;
+    fpsCap.value = state.settings.fpsCap; fpsCapLbl.textContent = state.settings.fpsCap;
+    numFmt.value = state.settings.numFmt;
+    themeToggle.checked = (state.settings.theme === 'light');
+
+    autosaveToggle.addEventListener('change', ()=>{ state.settings.autosave = autosaveToggle.checked; save(); });
+    autosaveSec.addEventListener('change', ()=>{ state.settings.autosaveSec = clamp(parseInt(autosaveSec.value||20,10),5,120); save(); });
+    fpsCap.addEventListener('input', ()=>{ state.settings.fpsCap = parseInt(fpsCap.value,10); fpsCapLbl.textContent = state.settings.fpsCap; });
+    fpsCap.addEventListener('change', ()=>{ save(); });
+    numFmt.addEventListener('change', ()=>{ state.settings.numFmt = numFmt.value; fmt = formatters[state.settings.numFmt] || formatters.short; renderAll(); save(); });
+    themeToggle.addEventListener('change', ()=>{ state.settings.theme = themeToggle.checked?'light':'dark'; applyTheme(); save(); });
+  }
+  function applyTheme(){
+    if (state.settings.theme==='light') document.body.classList.add('light'); else document.body.classList.remove('light');
+  }
+
+  // ---------- Daily Bonus ----------
+  function dailyBonus(){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const last = state.daily.last || 0;
+    const yesterday = new Date(today.getTime()-86400000).getTime();
+    if (last === today.getTime()){ elDaily.textContent = `Daily bonus claimed. Streak: ${state.daily.streak}`; return; }
+    // streak handling
+    if (last === yesterday) state.daily.streak = (state.daily.streak||0)+1; else state.daily.streak = 1;
+    const rewardGems = Math.min(5, Math.ceil(state.daily.streak/3)); // small scaling
+    const rewardRP = 10 * state.daily.streak;
+    state.gems += rewardGems; state.stats.lifetimeGems += rewardGems;
+    state.rp += rewardRP;
+    state.daily.last = today.getTime();
+    elDaily.textContent = `Claimed: +${rewardGems} Gems & +${rewardRP} RP (streak ${state.daily.streak})`;
+    toast("Daily bonus!");
+  }
+
+  // ---------- Loop ----------
+  let tickAccumulator = 0;
+  let lastRAF = now();
+  function gameLoop(ts){
+    const t = now();
+    const elapsed = (t - lastRAF)/1000;
+    lastRAF = t;
+    // FPS cap
+    const minFrame = 1/ state.settings.fpsCap;
+    tickAccumulator += elapsed;
+    if (elapsed < minFrame) { requestAnimationFrame(gameLoop); return; }
+
+    // time delta for sim
+    const dt = (t - state.lastTick)/1000; state.lastTick = t;
+
+    // resource production
+    const bps = currentBps();
+    const add = bps * dt;
+    state.bytes += add; state.totalBytes += add;
+    // RP generation
+    state.rp += labsRPperSec() * dt;
+
+    // autosave
+    if (state.settings.autosave && (t - state.lastSave) > (state.settings.autosaveSec*1000)) save();
+
+    // stats
+    if (bps > state.stats.bestBps) state.stats.bestBps = bps;
+
+    runAutoBuyer(dt);
+
+    // check achievements
+    checkAchievements();
+
+    // render (throttled by FPS cap effectively)
+    renderHeader();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // ---------- Events ----------
+  elClickBtn.addEventListener('click', (e)=>{
+    const rect = elClickArea.getBoundingClientRect();
+    doClick(e.clientX - rect.left, e.clientY - rect.top);
+  });
+  elClickArea.addEventListener('click', (e)=>{
+    if (e.target !== elClickBtn){
+      const rect = elClickArea.getBoundingClientRect();
+      doClick(e.clientX - rect.left, e.clientY - rect.top);
+    }
+  });
+  document.addEventListener('keydown', (e)=>{
+    if (e.code === 'Space'){ e.preventDefault(); const rect = elClickArea.getBoundingClientRect(); doClick(rect.width/2, rect.height/2); return; }
+    const n = parseInt(e.key,10);
+    if (!isNaN(n) && n>=1){
+      const idx = n-1;
+      const qty = e.ctrlKey ? 100 : e.shiftKey ? 10 : 1;
+      if (state.items[idx]) buy(idx, qty);
+    }
+    if (e.key.toLowerCase()==='r') document.querySelector('[data-panel="researchPanel"]').click();
+    if (e.key.toLowerCase()==='g') document.querySelector('[data-panel="upgradesPanel"]').click();
+    if (e.key.toLowerCase()==='a') document.querySelector('[data-panel="achPanel"]').click();
+  });
+
+  // ---------- Offline Progress ----------
+  function applyOffline(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    try{
+      const s = JSON.parse(raw);
+      if (!s.lastTick) return;
+      const elapsed = Math.max(0, now() - s.lastTick) / 1000;
+      if (elapsed < 5) return;
+      const gain = currentBps() * Math.min(elapsed, 60*60*8); // cap 8h
+      const rpg = labsRPperSec() * Math.min(elapsed, 60*60*8);
+      state.bytes += gain; state.totalBytes += gain; state.rp += rpg; state.offlineAwarded = gain;
+      elOffline.textContent = `Offline: +${fmt(gain)} bytes & +${fmt(rpg)} RP over ${Math.floor(elapsed/60)}m`;
+      setTimeout(()=>elOffline.textContent = '', 9000);
+    }catch{}
+  }
+
+  // ---------- Init ----------
+  function boot(){
+    load();
+    applyTheme();
+    fmt = formatters[state.settings.numFmt] || formatters.short;
+    initSettingsUI();
+    renderShop(); renderResearch(); renderUpgrades(); renderQuests(); renderAchievements(); renderStats(); renderHeader();
+    applyOffline();
+    checkMilestones();
+    dailyBonus();
+    state.lastTick = now();
+    requestAnimationFrame(gameLoop);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
