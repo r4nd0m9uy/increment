@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WeddingDrop – Foto’s delen met QR, zonder app | Live Display</title>
+  <meta name="description" content="Deel huwelijksfoto’s app-vrij via QR. WeddingDrop is GDPR-conform, EU-hosted en toont foto’s live op scherm. Gratis proberen." />
+  <link rel="canonical" href="https://www.weddingdrop.com/" />
+  <meta property="og:title" content="WeddingDrop – Foto’s delen met QR, zonder app | Live Display" />
+  <meta property="og:description" content="Deel huwelijksfoto’s app-vrij via QR. WeddingDrop is GDPR-conform, EU-hosted en toont foto’s live op scherm. Gratis proberen." />
+  <meta property="og:url" content="https://www.weddingdrop.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect width='100%' height='100%' fill='%23f3f4f6'/><text x='50%' y='50%' font-size='48' text-anchor='middle' fill='%236b7280'>WeddingDrop</text></svg>" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "WeddingDrop",
+        "url": "https://www.weddingdrop.com/"
+      },
+      {
+        "@type": "WebSite",
+        "name": "WeddingDrop",
+        "url": "https://www.weddingdrop.com/"
+      },
+      {
+        "@type": "Product",
+        "name": "WeddingDrop",
+        "description": "GDPR-conform foto-deelplatform zonder app, met QR-upload en Live Display.",
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Free",
+            "price": "0",
+            "priceCurrency": "EUR"
+          },
+          {
+            "@type": "Offer",
+            "name": "Premium",
+            "price": "14.99",
+            "priceCurrency": "EUR"
+          },
+          {
+            "@type": "Offer",
+            "name": "Premium+",
+            "price": "19.99",
+            "priceCurrency": "EUR"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {"@type": "Question","name": "Heb ik een app nodig?","acceptedAnswer": {"@type": "Answer","text": "Nee, gasten uploaden via een QR-link zonder app of account."}},
+          {"@type": "Question","name": "Hoe lang blijft de galerij online?","acceptedAnswer": {"@type": "Answer","text": "Afhankelijk van je plan: 7 dagen (Free), 6 maanden (Premium), 12 maanden (Premium+)."}},
+          {"@type": "Question","name": "Is het GDPR-conform?","acceptedAnswer": {"@type": "Answer","text": "Ja, alle data wordt verwerkt op EU-servers (Hetzner) volgens GDPR."}},
+          {"@type": "Question","name": "Werkt het ook voor andere events?","acceptedAnswer": {"@type": "Answer","text": "Ja, voor verjaardagen, schoolfeesten, bedrijfsevents en meer."}},
+          {"@type": "Question","name": "Hoe werkt het Live Display?","acceptedAnswer": {"@type": "Answer","text": "Foto’s verschijnen automatisch in een slideshow met QR-code, real-time geüpdatet."}},
+          {"@type": "Question","name": "Kan ik extra opslag kopen?","acceptedAnswer": {"@type": "Answer","text": "Ja, extra opslag kost €1,50 per GB."}},
+          {"@type": "Question","name": "Wat met privacy en toestemming?","acceptedAnswer": {"@type": "Answer","text": "Upload vereist expliciete toestemming, vastgelegd in de app."}},
+          {"@type": "Question","name": "Hoe download ik alles in één keer?","acceptedAnswer": {"@type": "Answer","text": "Met Premium of Premium+ kan je alle foto’s als ZIP downloaden."}}
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body class="bg-white text-gray-800 antialiased">
+<!-- Section: Sticky Navigation -->
+<header class="fixed w-full bg-white shadow z-50">
+  <div class="max-w-screen-xl mx-auto px-4 flex items-center justify-between h-16">
+    <a href="#" class="font-bold text-lg">WeddingDrop</a>
+    <nav class="hidden md:flex space-x-6">
+      <a href="#features" class="hover:text-pink-600">Features</a>
+      <a href="#live-display" class="hover:text-pink-600">Live Display</a>
+      <a href="#prijzen" class="hover:text-pink-600">Prijzen</a>
+      <a href="#faq" class="hover:text-pink-600">FAQ</a>
+      <a href="#contact" class="hover:text-pink-600">Contact</a>
+    </nav>
+    <a href="https://app.weddingdrop.com/new" class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">Probeer gratis</a>
+    <button class="md:hidden" id="menu-btn" aria-label="Menu">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+  </div>
+  <div class="md:hidden hidden" id="mobile-menu">
+    <a href="#features" class="block px-4 py-2">Features</a>
+    <a href="#live-display" class="block px-4 py-2">Live Display</a>
+    <a href="#prijzen" class="block px-4 py-2">Prijzen</a>
+    <a href="#faq" class="block px-4 py-2">FAQ</a>
+    <a href="#contact" class="block px-4 py-2">Contact</a>
+  </div>
+</header>
+
+<!-- Section: Hero -->
+<section class="pt-24 pb-12 bg-gray-50">
+  <div class="max-w-screen-xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
+    <div class="flex-1">
+      <h1 class="text-4xl font-bold mb-4">Deel je huwelijksfoto’s direct via QR – geen app nodig</h1>
+      <p class="mb-6 text-lg">GDPR-conform • Data op EU-servers (Hetzner) • Eenvoudig en veilig</p>
+      <div class="flex space-x-4">
+        <a href="https://app.weddingdrop.com/new" class="bg-pink-600 text-white px-6 py-3 rounded hover:bg-pink-700">Probeer gratis</a>
+        <a href="#live-display" class="bg-gray-200 text-gray-800 px-6 py-3 rounded hover:bg-gray-300">Bekijk demo</a>
+      </div>
+    </div>
+    <div class="flex-1">
+      <svg class="w-full h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+        <rect x="10" y="10" width="150" height="280" rx="20" fill="#f3f4f6"/>
+        <rect x="180" y="40" width="200" height="140" rx="10" fill="#e5e7eb"/>
+        <text x="255" y="120" font-size="20" text-anchor="middle" fill="#6b7280">Live Display</text>
+        <rect x="50" y="60" width="70" height="70" fill="#d1d5db"/>
+        <text x="85" y="105" font-size="12" text-anchor="middle" fill="#4b5563">QR</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- Section: Trust Badges -->
+<section class="py-6 bg-white">
+  <div class="max-w-screen-xl mx-auto px-4 flex flex-wrap gap-6 justify-center text-sm text-gray-600">
+    <span>🇪🇺 EU-hosting</span>
+    <span>✅ GDPR-conform</span>
+    <span>📱 Geen app nodig</span>
+  </div>
+</section>
+
+<!-- Section: How it works -->
+<section id="features" class="py-12 bg-gray-50">
+  <div class="max-w-screen-xl mx-auto px-4 text-center">
+    <h2 class="text-3xl font-bold mb-8">Zo werkt het</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div>
+        <div class="text-pink-600 text-4xl mb-4">1</div>
+        <p>Maak een event aan en print je QR-code.</p>
+      </div>
+      <div>
+        <div class="text-pink-600 text-4xl mb-4">2</div>
+        <p>Gasten scannen en uploaden zonder login.</p>
+      </div>
+      <div>
+        <div class="text-pink-600 text-4xl mb-4">3</div>
+        <p>Bekijk alle foto’s in je galerij of download als ZIP.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section: Live Display -->
+<section id="live-display" class="py-12 bg-white">
+  <div class="max-w-screen-xl mx-auto px-4">
+    <h2 class="text-3xl font-bold mb-6">Live Display</h2>
+    <p class="mb-6">Toon nieuwe uploads direct op een groot scherm. Je gasten zien zichzelf terug en worden aangemoedigd om meer te delen.</p>
+    <div class="bg-gray-100 p-6 rounded-lg flex flex-col items-center">
+      <svg class="w-full h-64 mb-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300">
+        <rect x="20" y="20" width="460" height="260" rx="10" fill="#e5e7eb"/>
+        <rect x="40" y="40" width="100" height="100" fill="#d1d5db"/>
+        <rect x="160" y="40" width="100" height="100" fill="#d1d5db"/>
+        <rect x="280" y="40" width="100" height="100" fill="#d1d5db"/>
+        <rect x="400" y="40" width="60" height="60" fill="#9ca3af"/>
+        <text x="430" y="70" font-size="12" text-anchor="middle" fill="#fff">QR</text>
+      </svg>
+      <a href="#prijzen" class="bg-pink-600 text-white px-6 py-3 rounded hover:bg-pink-700">Activeer Live Display</a>
+    </div>
+  </div>
+</section>
+
+<!-- Section: Feature Highlights -->
+<section class="py-12 bg-gray-50">
+  <div class="max-w-screen-xl mx-auto px-4">
+    <h2 class="text-3xl font-bold mb-6">Meer dan alleen foto’s delen</h2>
+    <ul class="list-disc pl-6 space-y-2">
+      <li>Moderatieoptie voor foto’s</li>
+      <li>ZIP-download voor snelle archivering</li>
+      <li>Geautomatiseerde e-mailflow voor activatie en reminders</li>
+      <li>Automatische opschoning na looptijd</li>
+      <li>Schaalbaar voor kleine en grote events</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Section: Pricing -->
+<section id="prijzen" class="py-12 bg-white">
+  <div class="max-w-screen-xl mx-auto px-4 text-center">
+    <h2 class="text-3xl font-bold mb-8">Prijzen per event</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="border rounded-lg p-6">
+        <h3 class="text-xl font-bold mb-4">Free</h3>
+        <ul class="mb-6 space-y-2 text-sm">
+          <li>Max. 50 foto’s</li>
+          <li>250 MB</li>
+          <li>Gallery 7 dagen</li>
+          <li>Upload tot 1 week na event</li>
+        </ul>
+        <p class="font-bold mb-4">Gratis</p>
+        <a href="https://app.weddingdrop.com/new?plan=free" class="bg-pink-600 text-white px-4 py-2 rounded">Kies Free</a>
+      </div>
+      <div class="border-2 border-pink-600 rounded-lg p-6 bg-pink-50">
+        <h3 class="text-xl font-bold mb-4">Premium</h3>
+        <ul class="mb-6 space-y-2 text-sm">
+          <li>Onbeperkt uploads</li>
+          <li>2 GB inbegrepen</li>
+          <li>ZIP-download</li>
+          <li>Gallery 6 maanden</li>
+          <li>Upload tot 1 maand na event</li>
+        </ul>
+        <p class="font-bold mb-4">€14,99</p>
+        <a href="https://app.weddingdrop.com/new?plan=premium" class="bg-pink-600 text-white px-4 py-2 rounded">Kies Premium</a>
+      </div>
+      <div class="border rounded-lg p-6">
+        <h3 class="text-xl font-bold mb-4">Premium+</h3>
+        <ul class="mb-6 space-y-2 text-sm">
+          <li>Onbeperkt uploads</li>
+          <li>5 GB inbegrepen</li>
+          <li>ZIP-download</li>
+          <li>Gallery 12 maanden</li>
+          <li>Upload tot 3 maanden na event</li>
+          <li>Live Display inbegrepen</li>
+          <li>Gepersonaliseerde e-mailbranding</li>
+          <li>Priority support (&lt;12u)</li>
+        </ul>
+        <p class="font-bold mb-4">€19,99</p>
+        <a href="https://app.weddingdrop.com/new?plan=premium-plus" class="bg-pink-600 text-white px-4 py-2 rounded">Kies Premium+</a>
+      </div>
+    </div>
+    <p class="mt-4 text-sm text-gray-500">Prijs per event, incl. BTW indien van toepassing. Extra opslag: €1,50/GB.</p>
+  </div>
+</section>
+
+<!-- Section: FAQ -->
+<section id="faq" class="py-12 bg-gray-50">
+  <div class="max-w-screen-xl mx-auto px-4">
+    <h2 class="text-3xl font-bold mb-6">Veelgestelde vragen</h2>
+    <div id="faq-list" class="space-y-4">
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Heb ik een app nodig?</button>
+        <div class="hidden faq-a mt-2 text-sm">Nee, gasten uploaden via een QR-link zonder app of account.</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Hoe lang blijft de galerij online?</button>
+        <div class="hidden faq-a mt-2 text-sm">Afhankelijk van je plan: 7 dagen (Free), 6 maanden (Premium), 12 maanden (Premium+).</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Is het GDPR-conform?</button>
+        <div class="hidden faq-a mt-2 text-sm">Ja, alle data wordt verwerkt op EU-servers (Hetzner) volgens GDPR.</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Werkt het ook voor niet-trouw-events?</button>
+        <div class="hidden faq-a mt-2 text-sm">Ja, voor verjaardagen, schoolfeesten, bedrijfsevents en meer.</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Hoe werkt het Live Display?</button>
+        <div class="hidden faq-a mt-2 text-sm">Foto’s verschijnen automatisch in een slideshow met QR-code, real-time geüpdatet.</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Kan ik extra opslag kopen?</button>
+        <div class="hidden faq-a mt-2 text-sm">Ja, extra opslag kost €1,50 per GB.</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Wat met privacy/toestemming?</button>
+        <div class="hidden faq-a mt-2 text-sm">Upload vereist expliciete toestemming, vastgelegd in de app.</div>
+      </div>
+      <div>
+        <button class="w-full text-left font-semibold faq-q">Hoe download ik alles in één keer?</button>
+        <div class="hidden faq-a mt-2 text-sm">Met Premium of Premium+ kan je alle foto’s als ZIP downloaden.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section: Contact -->
+<section id="contact" class="py-12 bg-white">
+  <div class="max-w-screen-xl mx-auto px-4">
+    <h2 class="text-3xl font-bold mb-6">Contact
+```
+
+
+</h2>
+    <form action="#" class="space-y-4 max-w-lg">
+      <input type="text" placeholder="Naam" class="w-full border px-4 py-2 rounded" required>
+      <input type="email" placeholder="E-mail" class="w-full border px-4 py-2 rounded" required>
+      <textarea placeholder="Bericht" class="w-full border px-4 py-2 rounded" rows="4" required></textarea>
+      <button type="submit" class="bg-pink-600 text-white px-6 py-2 rounded">Verstuur</button>
+    </form>
+  </div>
+</section>
+
+<!-- Footer -->
+
+<footer class="bg-gray-100 py-6 text-sm text-gray-600">
+  <div class="max-w-screen-xl mx-auto px-4 flex flex-col md:flex-row justify-between">
+    <p>&copy; 2025 WeddingDrop. Made in EU.</p>
+    <div class="flex space-x-4">
+      <a href="/privacy" class="hover:text-pink-600">Privacy</a>
+      <a href="/terms" class="hover:text-pink-600">Voorwaarden</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Cookie Banner -->
+
+<div id="cookie-banner" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 flex justify-between items-center hidden">
+  <p class="text-sm">We gebruiken alleen functionele cookies. <a href="/privacy" class="underline">Meer info</a></p>
+  <button id="cookie-accept" class="bg-pink-600 px-3 py-1 rounded">Ok</button>
+</div>
+
+<!-- Scripts -->
+
+<script>
+document.getElementById('menu-btn').addEventListener('click', () => {
+  document.getElementById('mobile-menu').classList.toggle('hidden');
+});
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const ans = btn.nextElementSibling;
+    ans.classList.toggle('hidden');
+  });
+});
+if(!localStorage.getItem('cookieAccepted')){
+  document.getElementById('cookie-banner').classList.remove('hidden');
+}
+document.getElementById('cookie-accept').addEventListener('click', () => {
+  localStorage.setItem('cookieAccepted', 'yes');
+  document.getElementById('cookie-banner').classList.add('hidden');
+});
+</script>
+
+</body>
+</html>
