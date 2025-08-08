@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Byte Foundry — A Tiny Incremental</title>
+<style>
+  :root{
+    --bg:#0f1221; --panel:#171a2e; --acc:#6bdcff; --acc2:#9af277; --text:#e9efff; --muted:#8ca0c8; --danger:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    color:var(--text); background:linear-gradient(180deg,#0b0e1b, var(--bg) 180px);
+  }
+  header{
+    padding:14px 16px; display:flex; gap:12px; align-items:center; justify-content:space-between;
+    background:#0b0e1b; border-bottom:1px solid #1f2441; position:sticky; top:0; z-index:2;
+  }
+  .brand{font-weight:700; letter-spacing:.3px}
+  .wrap{max-width:1100px; margin:0 auto; padding:18px; display:grid; gap:18px; grid-template-columns: 1.2fr .8fr;}
+  @media (max-width:900px){ .wrap{grid-template-columns:1fr} }
+  .card{
+    background:var(--panel); border:1px solid #242a4c; border-radius:12px; padding:16px; box-shadow:0 1px 0 rgba(255,255,255,.02) inset;
+  }
+  .row{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .stat{
+    background:#10142a; border:1px solid #22274a; border-radius:10px; padding:8px 10px; min-width:120px;
+  }
+  .big{
+    font-size:clamp(26px,5vw,40px); font-weight:800; letter-spacing:.5px; margin:.2rem 0;
+  }
+  button{
+    background:#141937; color:var(--text); border:1px solid #2a3263; padding:10px 14px;
+    border-radius:10px; cursor:pointer; transition:.15s transform, .15s opacity, .15s filter;
+  }
+  button:hover{filter:brightness(1.1)}
+  button:active{transform:scale(.98)}
+  button:disabled{opacity:.5; cursor:not-allowed; filter:none}
+  .primary{background:linear-gradient(180deg,#1b2254,#151a3c); border-color:#3a4aa1}
+  .accent{background:linear-gradient(180deg,#1a3b4a,#142c37); border-color:#2f6a82}
+  .danger{background:linear-gradient(180deg,#4a1a2a,#351424); border-color:#8f3553}
+  .click-area{
+    display:grid; place-items:center; height:220px; border-radius:12px; border:1px dashed #2a2f58; background:#10142a; position:relative; overflow:hidden;
+  }
+  .click-button{font-size:18px; padding:14px 18px}
+  .float{
+    position:absolute; pointer-events:none; animation:floatUp .9s ease-out forwards; font-weight:700;
+    text-shadow:0 1px 0 #000; opacity:.9
+  }
+  @keyframes floatUp{to{transform:translateY(-40px); opacity:0}}
+  .grid{display:grid; gap:10px}
+  .shop{display:grid; gap:10px}
+  .shop-item{
+    display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center; padding:10px; border:1px solid #27305a; border-radius:10px; background:#10142a;
+  }
+  .item-meta{font-size:13px; color:var(--muted)}
+  .price{font-weight:700}
+  .pill{display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:#0e132a; border:1px solid #263061; color:#cfe0ff}
+  .footer-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-top:8px}
+  .hint{color:var(--muted); font-size:12px}
+  .green{color:var(--acc2)}
+  .blue{color:var(--acc)}
+  details{border:1px solid #263061; border-radius:10px; padding:8px 10px; background:#0f1430}
+  summary{cursor:pointer}
+  kbd{background:#0b0f28; border:1px solid #2b3568; padding:1px 6px; border-radius:6px; font-size:12px}
+  .prestigeBox{
+    border:1px solid #2a7451; background:linear-gradient(180deg,#0f2a1e,#0b1f17); border-radius:12px; padding:12px;
+  }
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">💾 Byte Foundry</div>
+    <div class="row">
+      <div class="stat"><div class="mono" id="timeStat">—</div></div>
+      <button id="saveBtn" class="accent">Save</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <button id="resetBtn" class="danger">Hard Reset</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <div class="row">
+        <div class="stat">
+          <div>Bytes</div>
+          <div class="big" id="bytes">0</div>
+        </div>
+        <div class="stat">
+          <div>Production</div>
+          <div><span id="bps" class="blue">0</span> /s</div>
+        </div>
+        <div class="stat">
+          <div>Click Power</div>
+          <div><span id="clickPower" class="green">1</span></div>
+        </div>
+        <div class="stat">
+          <div>Gems</div>
+          <div><span id="gems" class="green">0</span></div>
+        </div>
+        <span class="pill">Global Multiplier: <span id="mult">x1.00</span></span>
+      </div>
+
+      <div class="click-area" id="clickArea" title="Click or press [Space]">
+        <button id="clickBtn" class="primary click-button">Compile (+<span id="clickGain">1</span>)</button>
+      </div>
+
+      <div class="footer-row">
+        <div class="hint">Hotkeys: <kbd>Space</kbd> click • <kbd>1..9</kbd> buy • <kbd>Shift</kbd> to buy x10 • <kbd>Ctrl</kbd> x100</div>
+        <div class="hint" id="offlineHint"></div>
+      </div>
+    </section>
+
+    <aside class="grid">
+      <section class="card">
+        <h3 style="margin-top:0;">Upgrades</h3>
+        <div class="shop" id="shop"></div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0;">Prestige</h3>
+        <div class="prestigeBox">
+          <div style="margin-bottom:8px">
+            Convert Bytes into <b>Gems</b> (boost all production) once you reach the threshold.
+          </div>
+          <div>Next prestige at <span id="prestigeNeed" class="mono">50,000</span> bytes → you’ll earn <b><span id="prestigeGain">0</span> Gems</b>.</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button id="prestigeBtn" class="accent" disabled>Ascend & Convert</button>
+            <span class="hint">Gem boost: +25% per Gem (multiplicative)</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>Changelog & Tips</summary>
+          <ul>
+            <li>Autosave every 20s. Offline progress supported.</li>
+            <li>Numbers scale smoothly; costs increase per purchase.</li>
+            <li>Use Shift/Ctrl to bulk buy.</li>
+            <li>Prestige after enough Bytes to speed things up.</li>
+          </ul>
+        </details>
+      </section>
+    </aside>
+  </main>
+
+<script>
+(() => {
+  // ---------- Utilities ----------
+  const clamp = (n,min,max)=>Math.max(min,Math.min(max,n));
+  const fmt = (n) => {
+    if (!isFinite(n)) return "∞";
+    if (n < 1000) return n.toFixed(n < 10 ? 2 : 0);
+    const units = ["K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","De"];
+    let i=-1;
+    while (n >= 1000 && i < units.length-1){ n/=1000; i++; }
+    return n.toFixed(n < 10 ? 2 : n < 100 ? 1 : 0) + (i>=0?units[i]:"");
+  };
+  const now = ()=>Date.now();
+
+  // ---------- Game Data ----------
+  const BASE_CLICK = 1;
+  const SAVE_KEY = "byteFoundrySave_v1";
+
+  const state = {
+    bytes: 0,
+    totalBytes: 0,
+    gems: 0,
+    clickLevel: 0,          // affects click power
+    items: [
+      // id, name, baseCost, costMult, bps, owned
+      { id:"cursor", name:"Cursor", baseCost:  15, costMult: 1.15, bps: 0.1, owned: 0, hotkey: '1' },
+      { id:"script", name:"Script", baseCost: 100, costMult: 1.17, bps: 1.0, owned: 0, hotkey: '2' },
+      { id:"bot",    name:"Build Bot", baseCost: 1100, costMult: 1.15, bps: 8.0, owned: 0, hotkey: '3' },
+      { id:"server", name:"Server", baseCost: 12000, costMult: 1.14, bps: 47.0, owned: 0, hotkey: '4' },
+      { id:"cluster",name:"Cluster", baseCost: 130000, costMult: 1.13, bps: 260.0, owned: 0, hotkey: '5' },
+      { id:"lab",    name:"R&D Lab", baseCost: 1400000, costMult: 1.12, bps: 1400.0, owned: 0, hotkey: '6' },
+    ],
+    lastTick: now(),
+    lastSave: now(),
+    offlineAwarded: 0
+  };
+
+  // Prestige config
+  const prestigeConfig = {
+    threshold: 50000,          // first prestige threshold
+    gainFactor: 100000,        // gems = floor((bytes - threshold) / gainFactor) + 1 (when bytes >= threshold)
+    gemBoost: 0.25             // +25% per gem multiplicative
+  };
+
+  // ---------- DOM ----------
+  const el = id => document.getElementById(id);
+  const elBytes = el('bytes');
+  const elBps = el('bps');
+  const elClickPower = el('clickPower');
+  const elClickGain = el('clickGain');
+  const elGems = el('gems');
+  const elMult = el('mult');
+  const elShop = el('shop');
+  const elClickBtn = el('clickBtn');
+  const elClickArea = el('clickArea');
+  const elOffline = el('offlineHint');
+  const elPrestigeNeed = el('prestigeNeed');
+  const elPrestigeGain = el('prestigeGain');
+  const elPrestigeBtn = el('prestigeBtn');
+  const elTimeStat = el('timeStat');
+
+  // Header controls
+  el('saveBtn').addEventListener('click', manualSave);
+  el('exportBtn').addEventListener('click', doExport);
+  el('importBtn').addEventListener('click', doImport);
+  el('resetBtn').addEventListener('click', hardReset);
+
+  // ---------- Persistence ----------
+  function save() {
+    state.lastSave = now();
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  }
+  function manualSave(){
+    save();
+    quickToast("Saved!");
+  }
+  function load() {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    try {
+      const s = JSON.parse(raw);
+      // basic validation
+      if (typeof s.bytes === 'number') Object.assign(state, s);
+    } catch { /* ignore */ }
+  }
+  function doExport(){
+    const data = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    navigator.clipboard.writeText(data).then(()=>quickToast("Save copied to clipboard!"));
+  }
+  async function doImport(){
+    const data = prompt("Paste exported save data:");
+    if (!data) return;
+    try {
+      const json = JSON.parse(decodeURIComponent(escape(atob(data))));
+      localStorage.setItem(SAVE_KEY, JSON.stringify(json));
+      location.reload();
+    } catch(e){
+      alert("Invalid save string.");
+    }
+  }
+  function hardReset(){
+    if (!confirm("This wipes your progress. Continue?")) return;
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  }
+
+  // ---------- Game Logic ----------
+  function globalMult(){
+    return Math.pow(1 + prestigeConfig.gemBoost, state.gems);
+  }
+  function clickPower(){
+    return Math.floor(BASE_CLICK * (1 + state.clickLevel)) * globalMult();
+  }
+  function itemCost(item, qty=1){
+    // geometric series for bulk cost
+    const n = item.owned;
+    if (qty === 1) return item.baseCost * Math.pow(item.costMult, n);
+    const r = item.costMult;
+    return item.baseCost * Math.pow(r,n) * ((Math.pow(r, qty) - 1) / (r - 1));
+  }
+  function totalBps(){
+    const mult = globalMult();
+    return state.items.reduce((sum, it)=> sum + it.bps * it.owned, 0) * mult;
+  }
+  function prestigePreview(){
+    const need = prestigeConfig.threshold;
+    elPrestigeNeed.textContent = fmt(need);
+    const gain = state.bytes >= need ? (1 + Math.floor((state.bytes - need) / prestigeConfig.gainFactor)) : 0;
+    elPrestigeGain.textContent = gain;
+    elPrestigeBtn.disabled = gain <= 0;
+    return gain;
+  }
+  function prestige(){
+    const gain = prestigePreview();
+    if (gain <= 0) return;
+    if (!confirm(`Ascend now for ${gain} Gems? This resets Bytes & items.`)) return;
+    state.gems += gain;
+    state.bytes = 0;
+    state.totalBytes = 0;
+    state.items.forEach(i => i.owned = 0);
+    state.clickLevel = 0;
+    save();
+    quickToast(`Ascended! +${gain} Gems`);
+  }
+
+  // ---------- UI ----------
+  function renderShop(){
+    elShop.innerHTML = '';
+    state.items.forEach((it, idx)=>{
+      const cost1 = itemCost(it, 1);
+      const node = document.createElement('div');
+      node.className = 'shop-item';
+      node.innerHTML = `
+        <div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <strong>${it.name}</strong>
+            <span class="pill">+${fmt(it.bps)} /s</span>
+            <span class="pill">Owned: ${it.owned}</span>
+            <span class="pill">Hotkey: ${it.hotkey}</span>
+          </div>
+          <div class="item-meta">Cost: <span class="price">${fmt(cost1)}</span> bytes (x1)</div>
+          <div class="item-meta">x10: <span class="price">${fmt(itemCost(it,10))}</span> • x100: <span class="price">${fmt(itemCost(it,100))}</span></div>
+        </div>
+        <div class="row">
+          <button class="buy1" data-i="${idx}">Buy 1</button>
+          <button class="buy10" data-i="${idx}">x10</button>
+          <button class="buy100" data-i="${idx}">x100</button>
+        </div>
+      `;
+      elShop.appendChild(node);
+    });
+    elShop.querySelectorAll('.buy1').forEach(b=>b.addEventListener('click', ()=>buy(parseInt(b.dataset.i),1)));
+    elShop.querySelectorAll('.buy10').forEach(b=>b.addEventListener('click', ()=>buy(parseInt(b.dataset.i),10)));
+    elShop.querySelectorAll('.buy100').forEach(b=>b.addEventListener('click', ()=>buy(parseInt(b.dataset.i),100)));
+  }
+
+  function render(){
+    const bps = totalBps();
+    elBytes.textContent = fmt(state.bytes);
+    elBps.textContent = fmt(bps);
+    elClickPower.textContent = fmt(clickPower());
+    elClickGain.textContent = fmt(clickPower());
+    elGems.textContent = fmt(state.gems);
+    elMult.textContent = "x" + (globalMult()).toFixed(2);
+    prestigePreview();
+
+    // Update shop buttons enable/disable quickly
+    elShop.querySelectorAll('.shop-item').forEach((node, idx)=>{
+      const it = state.items[idx];
+      const can1 = state.bytes >= itemCost(it,1);
+      const can10 = state.bytes >= itemCost(it,10);
+      const can100 = state.bytes >= itemCost(it,100);
+      node.querySelector('.buy1').disabled = !can1;
+      node.querySelector('.buy10').disabled = !can10;
+      node.querySelector('.buy100').disabled = !can100;
+      node.querySelector('.item-meta .price').textContent = fmt(itemCost(it,1));
+      const metas = node.querySelectorAll('.item-meta .price');
+      if (metas[1]) metas[1].textContent = fmt(itemCost(it,10));
+      if (metas[2]) metas[2].textContent = fmt(itemCost(it,100));
+      node.querySelectorAll('.pill')[1].textContent = `Owned: ${it.owned}`;
+    });
+
+    // header time
+    const d = new Date();
+    elTimeStat.textContent = d.toLocaleTimeString();
+
+    requestAnimationFrame(()=>{}); // noop to keep UI smooth
+  }
+
+  function buy(idx, qty){
+    const it = state.items[idx];
+    const cost = itemCost(it, qty);
+    if (state.bytes < cost) return;
+    state.bytes -= cost;
+    it.owned += qty;
+    render();
+  }
+
+  function doClick(x,y){
+    const gain = clickPower();
+    state.bytes += gain;
+    state.totalBytes += gain;
+    floatText(`+${fmt(gain)}`, x, y, '#6bdcff');
+    render();
+  }
+
+  function floatText(txt, x, y, color='#fff'){
+    const s = document.createElement('div');
+    s.className = 'float';
+    s.textContent = txt;
+    s.style.left = (x - 10) + 'px';
+    s.style.top = (y - 10) + 'px';
+    s.style.color = color;
+    elClickArea.appendChild(s);
+    setTimeout(()=>s.remove(), 900);
+  }
+
+  function quickToast(msg){
+    floatText(msg, elClickArea.clientWidth - 90, 24, '#9af277');
+  }
+
+  // ---------- Loop ----------
+  function tick(){
+    const t = now();
+    const dt = (t - state.lastTick) / 1000; // seconds
+    state.lastTick = t;
+
+    const bps = totalBps();
+    const add = bps * dt;
+    state.bytes += add;
+    state.totalBytes += add;
+
+    // autosave every 20s
+    if (t - state.lastSave > 20000) save();
+
+    render();
+    requestAnimationFrame(tick);
+  }
+
+  // ---------- Events ----------
+  elClickBtn.addEventListener('click', (e)=>{
+    const rect = elClickArea.getBoundingClientRect();
+    doClick(e.clientX - rect.left, e.clientY - rect.top);
+  });
+  elClickArea.addEventListener('click', (e)=>{
+    if (e.target !== elClickBtn){
+      const rect = elClickArea.getBoundingClientRect();
+      doClick(e.clientX - rect.left, e.clientY - rect.top);
+    }
+  });
+  document.addEventListener('keydown', (e)=>{
+    if (e.code === 'Space'){ e.preventDefault(); // prevent page scroll
+      const rect = elClickArea.getBoundingClientRect();
+      doClick(rect.width/2, rect.height/2);
+      return;
+    }
+    // hotkeys 1..9 buy (with Shift/Ctrl for qty)
+    const n = parseInt(e.key,10);
+    if (!isNaN(n) && n>=1){
+      const idx = n-1;
+      const qty = e.ctrlKey ? 100 : e.shiftKey ? 10 : 1;
+      if (state.items[idx]) buy(idx, qty);
+    }
+  });
+
+  elPrestigeBtn.addEventListener('click', prestige);
+
+  // ---------- Offline Progress ----------
+  function applyOffline(){
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    try{
+      const s = JSON.parse(raw);
+      if (!s.lastTick) return;
+      const elapsed = Math.max(0, now() - s.lastTick) / 1000;
+      if (elapsed < 5) return;
+      const gain = totalBps() * Math.min(elapsed, 60*60*8); // cap at 8h
+      state.bytes += gain;
+      state.totalBytes += gain;
+      state.offlineAwarded = gain;
+      elOffline.textContent = `Offline gains: +${fmt(gain)} bytes over ${Math.floor(elapsed/60)}m`;
+      setTimeout(()=>elOffline.textContent = '', 8000);
+    }catch{}
+  }
+
+  // ---------- Boot ----------
+  function initShopHotkeys(){
+    // Render once to attach
+    renderShop();
+  }
+
+  load();
+  // Convert any missing fields (forward-compat)
+  state.items.forEach(i=>{
+    if (typeof i.owned !== 'number') i.owned = 0;
+  });
+
+  initShopHotkeys();
+  render();
+  applyOffline();
+  state.lastTick = now(); // reset tick anchor after offline calc
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
